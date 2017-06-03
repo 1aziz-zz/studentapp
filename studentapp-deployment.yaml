@@ -1,0 +1,41 @@
+#This file can be used by Kubernetes to create a new deployment
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: studentapp-deployment-a
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: studentapp
+    spec:
+      containers:
+        - name: studentapp
+          image: "gcr.io/stage-146011/studentapp:latest"
+          env:
+            - name: GROUP
+              valueFrom:
+                configMapKeyRef:
+                  name: groups-config
+                  key: group1
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: db-data
+                  key: host
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-data
+                  key: password
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: db-data
+                  key: username
+          ports:
+          - containerPort: 9000
+            protocol: TCP
+

@@ -1,0 +1,44 @@
+sudo: false
+language: java
+jdk:
+- oraclejdk8
+
+services:
+- docker
+
+cache:
+  directories:
+  - "$HOME/google-cloud-sdk/"
+env:
+-  PATH=$PATH:${HOME}/google-cloud-sdk/bin CLOUDSDK_CORE_DISABLE_PROMPTS=1 DB_SCHEMA=new_db-schema.sql
+
+#script:
+#- python3 app.py
+
+install:
+- gradle build
+
+after_success:
+- if [ ! -d "$HOME/google-cloud-sdk/bin" ]; then rm -rf $HOME/google-cloud-sdk; export
+  CLOUDSDK_CORE_DISABLE_PROMPTS=1; curl https://sdk.cloud.google.com | bash; fi
+- source /home/travis/google-cloud-sdk/path.bash.inc
+- tar -xzf credentials.tar.gz
+- mkdir -p lib
+- gcloud auth activate-service-account --key-file client-secret.json
+- gcloud config set project stage-146011
+- docker build -t gcr.io/stage-146011/studentapp:latest .
+- gcloud docker push gcr.io/stage-146011/studentapp:latest
+#- gcloud components install kubectl
+#- gcloud config set compute/zone euroWpe-west1-d
+#- gcloud config set container/cluster studentapp
+#- gcloud container clusters get-credentials studentapp
+#- kubectl replace --force -f ./pod.yaml  - gcloud container clusters get-credentials $CLOUDSDK_CORE_PROJECT
+
+before_install:
+- openssl aes-256-cbc -K $encrypted_afdace42b83f_key -iv $encrypted_afdace42b83f_iv
+  -in credentials.tar.gz.enc -out credentials.tar.gz -d
+- sudo apt-get update
+- sudo apt-get install python3
+- python3 -V
+- sudo apt-get install python3-pip
+- pip install pytest
